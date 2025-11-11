@@ -1,5 +1,7 @@
 # pf_shop
 
+=============================================================== TUGAS 7 =====================================================================
+
 1. Apa itu Widget Tree pada Flutter dan bagaimana hubungan parent-child bekerja antar widget
 => Widget Tree adalah struktur hierarki dari semua widget yang membentuk interface aplikasi flutter, setiap tampilan (UI) di Flutter dibangun dari kumpulan widget yang saling bersarang (nested), dari atas ke bawah
 -> parent widget adalah widget yang membungkus widget lain
@@ -122,3 +124,168 @@ Contoh ------------------ Mengubah warna tombol → tidak kehilangan data ------
 contoh:
 - sedang mengetes warna tombol → cukup Hot Reload
 - menambahkan variabel baru di main.dart → perlu Hot Restart
+
+
+
+
+
+
+
+
+
+
+
+
+=============================================================== TUGAS 8 =====================================================================
+
+1. Bedanya Navigator.push() vs Navigator.pushReplacement(), dan kapan saya pakai
+
+a) Navigator.push()
+=> Navigator.push() itu kayak numpuk halaman baru di atas halaman lama, halaman lama masih ada di stack, jadi kalau user pencet tombol back, dia bakal balik lagi ke halaman sebelumnya
+=> Contoh di app saya:
+kalo dari halaman utama saya mau ke form tambah produk, saya pakai:
+Navigator.push(
+  context,
+  MaterialPageRoute(builder: (context) => const NewsFormPage()),
+);
+=> Kenapa? Karena setelah user isi form dan selesai, wajar kalau dia balik lagi ke halaman utama dengan back
+
+b) Navigator.pushReplacement()
+=> Navigator.pushReplacement() itu mengganti halaman sekarang dengan halaman baru, halaman lama dibuang dari stack, jadi tombol back nggak akan balik ke halaman sebelumnya itu
+=> Di aplikasi saya, ini kepake di Drawer
+Misalnya dari form atau halaman lain, user pilih menu “Halaman Utama” di drawer:
+Navigator.pushReplacementNamed(context, '/');
+=> Kenapa pakai replacement?
+Supaya stack nggak numpuk banyak halaman yang sebenarnya sama-sama home. Jadi setiap kali pindah lewat drawer, halaman lama diganti, bukan ditumpuk.
+
+Singkatnya:
+- push() => buat navigasi normal (perjalanan maju yang nanti masih mungkin balik)
+- pushReplacement() => buat pindah halaman, misalnya dari drawer, atau setelah login, supaya user nggak bisa balik ke halaman sebelumnya yang udah nggak relevan
+
+
+
+2. Gimana saya pakai Scaffold, AppBar, Drawer supaya layout konsisten
+Di aplikasi Football Shop, saya bikin pola dasar halaman yang sama di semua screen:
+
+=> Scaffold
+Ini jadi kerangka utama setiap layar
+Di semua halaman (halaman utama dan form), saya selalu bungkus konten dengan Scaffold, supaya punya slot:
+appBar
+drawer
+body
+=> Contoh:
+return Scaffold(
+  appBar: AppBar(...),
+  drawer: const LeftDrawer(),
+  body: ...,
+);
+
+=> AppBar
+Judulnya saya samain yaitu “Football Shop” biar user ngerasa masih di app yang sama, warna AppBar juga konsisten (hijau) supaya kuat identitas brand tokonya, di atas halaman utama maupun form, AppBar ini selalu ada, cuma isi subtitle/konten di bawahnya yang berubah
+
+=> Drawer (LeftDrawer)
+Saya bikin LeftDrawer sebagai widget terpisah, di dalamnya ada dua menu utama:
+- Halaman Utama
+- Tambah Produk
+Terus saya reuse di semua screen dengan:
+drawer: const LeftDrawer(),
+Jadi, di halaman mana pun user berada, pengalaman navigasinya sama, tinggal tarik dari kiri, dan pilihan menunya selalu konsisten
+
+Dengan cara ini, saya nggak bikin layout tiap halaman dari nol, tapi ngikutin kerangka yang sama: Scaffold + AppBar + Drawer => tinggal ganti isi body aja
+
+
+
+3. Kenapa saya pakai Padding, SingleChildScrollView, ListView di form
+di halaman form tambah produk, saya banyak pakai widget layout buat ngebantu tampilan dan UX:
+a) Padding
+- fungsinya itu ngasih jarak biar elemen-elemen nggak mepet ke pinggir layar, tanpa padding, form kelihatan sesek/padey dan susah dibaca
+- contoh di form saya:
+Padding(
+  padding: const EdgeInsets.only(bottom: 16.0),
+  child: TextFormField(
+    decoration: InputDecoration(
+      labelText: "Nama Produk",
+      ...
+    ),
+    ...
+  ),
+),
+di sini saya kasih padding bawah 16 pixel di tiap field, supaya antar field ada jarak yang sesuai
+
+b) SingleChildScrollView
+ini penting biar form bisa discroll kalau kontennya panjang atau layar kecil (misalnya HP dengan keyboard kebuka), tanpa ini, bisa terjadi overflow (muncul pesan kuning merah di bawah)
+di app saya, seluruh form dibungkus:
+SingleChildScrollView(
+  padding: const EdgeInsets.all(16.0),
+  child: Column(
+    children: [
+      // semua TextFormField, Dropdown, Switch, dll
+    ],
+  ),
+)
+jadi meskipun field banyak (nama, harga, deskripsi, kategori, url, switch), user tetap bisa scroll saampe bawah
+
+c. ListView / ListBody
+di popup (AlertDialog) setelah user klik save, saya pakai ListBody (atau bisa ListView) buat menyusun teks hasil input secara rapi ke bawah:
+content: SingleChildScrollView(
+  child: ListBody(
+    children: [
+      Text('Nama: $nameState'),
+      Text('Harga: $priceState'),
+      ...
+    ],
+  ),
+),
+
+=> keuntungannya kalo datanya agak panjang (misalnya deskripsi produk panjang), konten dialog masih bisa discroll dan nggak kepotong
+
+=> Intinya:
+- Padding => bikin tampilan rapi
+- SingleChildScrollView => mencegah overflow, form bisa discroll
+- ListView/ListBody => nampilin banyak baris konten dengan layout vertikal yang rapih
+
+
+
+
+4. Gimana saya nurunin tema warna biar konsisten dengan brand Football Shop
+di aplikasi saya, saya pengen brand nya kerasa hijau gitu, kaya lapangan bola, jadinya
+- atur tema global di MaterialApp
+- di main.dart, saya set color scheme utama:
+return MaterialApp(
+  title: 'Football Shop',
+  theme: ThemeData(
+    colorScheme: ColorScheme.fromSwatch(
+      primarySwatch: Colors.green,
+    ).copyWith(
+      secondary: Colors.greenAccent[400],
+    ),
+    useMaterial3: true,
+  ),
+  ...
+);
+primarySwatch: Colors.green => bikin warna utama app hijau (AppBar, fokus form, tombol, dll ikut tone hijau)
+secondary saya pilih ijo yang lebih terang buat aksen
+
+=> samain warna di AppBar dan Drawer
+- di AppBar:
+appBar: AppBar(
+  backgroundColor: Colors.green.shade700,
+  title: const Text('Football Shop'),
+  ...
+),
+
+- di DrawerHeader:
+decoration: BoxDecoration(
+  color: Colors.green.shade700,
+),
+
+=> jadi user selalu ngeliat hijau yang sama di area navigasi utama
+gunakan warna serupa di background dan kartu, background halaman utama saya pakai hijau muda:
+body: Container(
+  color: Colors.green.shade50,
+  ...
+),
+kartu menu (All Products, My Products, Create Product) warnanya biru, hijau, merah, tapi AppBar dan header tetap hijau, jadi brand utama tetap kebaca
+
+=> Form & fokus field
+karena primary color hijau, saat user tap TextFormField, garis fokus dan label yang naik ikut warna hijau juga, jadi makin nyatu dengan identitas “Football Shop”
