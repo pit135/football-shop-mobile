@@ -6,8 +6,10 @@ import 'package:pf_shop/screens/menu.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 
-const String baseUrl = 'http://10.0.2.2:8000';
-// Kalau jalankan di Chrome, ganti: const String baseUrl = 'http://localhost:8000';
+// EMULATOR ANDROID:
+// const String baseUrl = 'http://10.0.2.2:8000';
+// CHROME / WEB:
+const String baseUrl = 'http://localhost:8000';
 
 class ProductFormPage extends StatefulWidget {
   const ProductFormPage({super.key});
@@ -43,15 +45,12 @@ class _ProductFormPageState extends State<ProductFormPage> {
         child: ListView(
           padding: const EdgeInsets.all(16.0),
           children: [
-            // Nama Produk
             TextFormField(
               decoration: const InputDecoration(labelText: "Nama Produk"),
               onChanged: (value) => _name = value,
               validator: (value) =>
                   (value == null || value.isEmpty) ? "Tidak boleh kosong" : null,
             ),
-
-            // Deskripsi
             TextFormField(
               decoration: const InputDecoration(labelText: "Deskripsi"),
               onChanged: (value) => _description = value,
@@ -59,60 +58,33 @@ class _ProductFormPageState extends State<ProductFormPage> {
               validator: (value) =>
                   (value == null || value.isEmpty) ? "Tidak boleh kosong" : null,
             ),
-
-            // URL Gambar
             TextFormField(
               decoration: const InputDecoration(labelText: "URL Gambar"),
               onChanged: (value) => _thumbnail = value,
             ),
-
-            // Harga
             TextFormField(
               decoration: const InputDecoration(labelText: "Harga"),
               keyboardType: TextInputType.number,
               onChanged: (value) => _price = int.tryParse(value) ?? 0,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return "Tidak boleh kosong";
-                }
-                if (int.tryParse(value) == null) {
-                  return "Harga harus berupa angka";
-                }
-                return null;
-              },
+              validator: (value) =>
+                  (value == null || value.isEmpty) ? "Tidak boleh kosong" : null,
             ),
-
-            // Stok
             TextFormField(
               decoration: const InputDecoration(labelText: "Stok"),
               keyboardType: TextInputType.number,
               onChanged: (value) => _stock = int.tryParse(value) ?? 0,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return "Tidak boleh kosong";
-                }
-                if (int.tryParse(value) == null) {
-                  return "Stok harus berupa angka";
-                }
-                return null;
-              },
+              validator: (value) =>
+                  (value == null || value.isEmpty) ? "Tidak boleh kosong" : null,
             ),
-
-            // Brand
             TextFormField(
               decoration: const InputDecoration(labelText: "Brand"),
               onChanged: (value) => _brand = value,
             ),
-
-            // Ukuran
             TextFormField(
               decoration: const InputDecoration(labelText: "Ukuran"),
               onChanged: (value) => _size = value,
             ),
-
             const SizedBox(height: 12),
-
-            // Kategori
             DropdownButtonFormField<String>(
               value: _category,
               decoration: const InputDecoration(labelText: "Kategori"),
@@ -126,10 +98,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 _category = value ?? 'jersey';
               }),
             ),
-
             const SizedBox(height: 16),
-
-            // Produk Unggulan
             SwitchListTile(
               title: const Text("Produk Unggulan"),
               value: _isFeatured,
@@ -139,22 +108,17 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 });
               },
             ),
-
             const SizedBox(height: 24),
-
-            // Tombol submit
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 child: const Text("Tambah Produk"),
                 onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    // URL endpoint ke Django
-                    final String url =
-                        "$baseUrl/create-product-flutter/"; // pastikan sama dengan urls.py Django
+                  if (!_formKey.currentState!.validate()) return;
 
+                  try {
                     final response = await request.postJson(
-                      url,
+                      "$baseUrl/create-flutter/",
                       jsonEncode({
                         "name": _name,
                         "description": _description,
@@ -176,7 +140,6 @@ class _ProductFormPageState extends State<ProductFormPage> {
                           content: Text("Produk berhasil disimpan!"),
                         ),
                       );
-                      // kembali ke home
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
@@ -187,12 +150,18 @@ class _ProductFormPageState extends State<ProductFormPage> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                            "Terjadi kesalahan, silakan coba lagi. "
-                            "${response['message'] ?? ''}",
+                            "Gagal menyimpan produk: ${response['message'] ?? 'Terjadi kesalahan'}",
                           ),
                         ),
                       );
                     }
+                  } catch (e) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Terjadi error: $e"),
+                      ),
+                    );
                   }
                 },
               ),

@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:pf_shop/models/product_entry.dart';
+import 'package:pf_shop/screens/product_detail.dart';
 import 'package:pf_shop/widgets/product_card.dart';
 import 'package:pf_shop/widgets/left_drawer.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
+
+// Chrome/web
+const String baseUrl = 'http://localhost:8000';
+// Emulator Android: const String baseUrl = 'http://10.0.2.2:8000';
 
 class ProductListPage extends StatefulWidget {
   const ProductListPage({super.key});
@@ -14,16 +19,15 @@ class ProductListPage extends StatefulWidget {
 
 class _ProductListPageState extends State<ProductListPage> {
   Future<List<ProductEntry>> fetchProducts(CookieRequest request) async {
-    // Untuk Chrome/web
-    final response = await request.get('http://localhost:8000/show-json/');
+    final response = await request.get('$baseUrl/show-json/');
 
-    List<ProductEntry> products = [];
+    List<ProductEntry> listProducts = [];
     for (var d in response) {
       if (d != null) {
-        products.add(ProductEntry.fromJson(d));
+        listProducts.add(ProductEntry.fromJson(d));
       }
     }
-    return products;
+    return listProducts;
   }
 
   @override
@@ -32,7 +36,7 @@ class _ProductListPageState extends State<ProductListPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Daftar Produk'),
+        title: const Text('All Products'),
       ),
       drawer: const LeftDrawer(),
       body: FutureBuilder(
@@ -45,22 +49,33 @@ class _ProductListPageState extends State<ProductListPage> {
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(
               child: Text(
-                "Belum ada produk.",
-                style: TextStyle(fontSize: 18),
+                'Belum ada produk di Football Shop.',
+                style: TextStyle(fontSize: 18, color: Color(0xff59A5D8)),
               ),
             );
           }
 
-          return ListView.builder(
-            itemCount: snapshot.data!.length,
+          final products = snapshot.data!;
+
+          return GridView.builder(
+            padding: const EdgeInsets.all(12),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,        // 3 kolom
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.70,  
+            ),
+            itemCount: products.length,
             itemBuilder: (_, index) {
-              final product = snapshot.data![index] as ProductEntry;
+              final product = products[index];
               return ProductCard(
                 product: product,
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("Detail produk: ${product.name}"),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          ProductDetailPage(product: product),
                     ),
                   );
                 },

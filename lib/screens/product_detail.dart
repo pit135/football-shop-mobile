@@ -1,7 +1,11 @@
+// lib/screens/product_detail_page.dart
 import 'package:flutter/material.dart';
 import 'package:pf_shop/models/product_entry.dart';
 
-const String baseUrl = 'http://10.0.2.2:8000';
+// CHROME / WEB:
+const String baseUrl = 'http://localhost:8000';
+// Emulator Android:
+// const String baseUrl = 'http://10.0.2.2:8000';
 
 class ProductDetailPage extends StatelessWidget {
   final ProductEntry product;
@@ -9,28 +13,36 @@ class ProductDetailPage extends StatelessWidget {
   const ProductDetailPage({super.key, required this.product});
 
   String _formatDate(DateTime date) {
-    final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}, '
-        '${date.hour.toString().padLeft(2, '0')}:'
-        '${date.minute.toString().padLeft(2, '0')}';
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Product Detail'),
-        backgroundColor: Colors.indigo,
+        title: const Text('Detail Produk'),
+        backgroundColor: Colors.green.shade700,
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Thumbnail produk
+            // Gambar
             if (product.thumbnail.isNotEmpty)
               Image.network(
                 '$baseUrl/proxy-image/?url=${Uri.encodeComponent(product.thumbnail)}',
@@ -51,18 +63,20 @@ class ProductDetailPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Badge produk unggulan
+                  // Badge featured
                   if (product.isFeatured)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12.0, vertical: 6.0),
+                        horizontal: 12.0,
+                        vertical: 6.0,
+                      ),
                       margin: const EdgeInsets.only(bottom: 12.0),
                       decoration: BoxDecoration(
                         color: Colors.amber,
                         borderRadius: BorderRadius.circular(20.0),
                       ),
                       child: const Text(
-                        'Produk Unggulan',
+                        'Featured',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
@@ -70,7 +84,7 @@ class ProductDetailPage extends StatelessWidget {
                       ),
                     ),
 
-                  // Nama produk
+                  // Nama
                   Text(
                     product.name,
                     style: const TextStyle(
@@ -80,14 +94,16 @@ class ProductDetailPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
 
-                  // Kategori & Tanggal dibuat
+                  // Kategori + tanggal
                   Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10.0, vertical: 4.0),
+                          horizontal: 10.0,
+                          vertical: 4.0,
+                        ),
                         decoration: BoxDecoration(
-                          color: Colors.indigo.shade100,
+                          color: Colors.green.shade100,
                           borderRadius: BorderRadius.circular(12.0),
                         ),
                         child: Text(
@@ -95,77 +111,51 @@ class ProductDetailPage extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: Colors.indigo.shade700,
+                            color: Colors.green.shade700,
                           ),
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Text(
-                        _formatDate(product.createdAt),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
+                      if (product.createdAt != null)
+                        Text(
+                          _formatDate(product.createdAt!),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
                         ),
-                      ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
 
                   // Harga
-                  Row(
-                    children: [
-                      Icon(Icons.sell, size: 18, color: Colors.green[700]),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Rp ${product.price}',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green[700],
-                        ),
-                      ),
-                    ],
+                  Text(
+                    'Rp ${product.price}',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+
+                  // Brand, stok, ukuran
+                  Text('Brand : ${product.brand}'),
+                  Text('Stok  : ${product.stock}'),
+                  Text('Ukuran: ${product.size}'),
+                  const SizedBox(height: 16),
+
+                  const Divider(),
+
+                  // Deskripsi
+                  const Text(
+                    'Deskripsi',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
-
-                  // Brand, size, stock
-                  Row(
-                    children: [
-                      const Icon(Icons.storefront, size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Brand: ${product.brand}',
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  if (product.size.isNotEmpty)
-                    Row(
-                      children: [
-                        const Icon(Icons.straighten, size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Size: ${product.size}',
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                      ],
-                    ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(Icons.inventory_2, size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Stock: ${product.stock}',
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                    ],
-                  ),
-
-                  const Divider(height: 32),
-
-                  // Deskripsi produk
                   Text(
                     product.description,
                     style: const TextStyle(
@@ -174,7 +164,6 @@ class ProductDetailPage extends StatelessWidget {
                     ),
                     textAlign: TextAlign.justify,
                   ),
-                  const SizedBox(height: 24),
                 ],
               ),
             ),

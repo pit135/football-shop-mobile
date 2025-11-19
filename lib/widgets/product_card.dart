@@ -1,5 +1,11 @@
+// lib/widgets/product_card.dart
 import 'package:flutter/material.dart';
 import 'package:pf_shop/models/product_entry.dart';
+
+// GUNAKAN INI UNTUK CHROME / WEB
+const String baseUrl = 'http://localhost:8000';
+// Kalau pakai Android emulator ganti jadi:
+// const String baseUrl = 'http://10.0.2.2:8000';
 
 class ProductCard extends StatelessWidget {
   final ProductEntry product;
@@ -11,45 +17,38 @@ class ProductCard extends StatelessWidget {
     required this.onTap,
   });
 
-  String _formatDate(DateTime date) {
-    // Format sederhana: "Oct 31, 2025"
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    return '${months[date.month - 1]} ${date.day}, ${date.year}';
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: Card(
-        color: const Color(0xFFF0FFF4), // hijau muda seperti screenshot
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-        ),
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.0),
+      ),
+      elevation: 3,
+      clipBehavior: Clip.antiAlias,
+      child: Container(
+        color: const Color(0xFFF7FFF7),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Baris paling atas: tag kategori & featured
+            // ======= HEADER (CATEGORY CHIP + FEATURED BADGE) =======
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Kategori
+                  // Category chip
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.green.shade700,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      product.category[0].toUpperCase() +
-                          product.category.substring(1),
+                      _formatCategory(product.category),
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -60,25 +59,27 @@ class ProductCard extends StatelessWidget {
                   // Featured badge
                   if (product.isFeatured)
                     Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFF4C2),
-                        borderRadius: BorderRadius.circular(12),
+                        color: const Color(0xFFFFE08A),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
                         children: const [
                           Icon(
                             Icons.star,
                             size: 18,
-                            color: Color(0xFFFFB300),
+                            color: Color(0xFFF5A623),
                           ),
-                          SizedBox(width: 4),
+                          SizedBox(width: 6),
                           Text(
                             'Featured',
                             style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF8A6D00),
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF7B4D00),
                             ),
                           ),
                         ],
@@ -88,56 +89,53 @@ class ProductCard extends StatelessWidget {
               ),
             ),
 
-            // Gambar produk
-            if (product.thumbnail.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: AspectRatio(
-                    aspectRatio: 16 / 9,
-                    child: Image.network(
-                      product.thumbnail,
+            const SizedBox(height: 8),
+
+            // ======= THUMBNAIL BESAR =======
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: product.thumbnail.isNotEmpty
+                  ? Image.network(
+                      '$baseUrl/proxy-image/?url=${Uri.encodeComponent(product.thumbnail)}',
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Container(
-                        color: Colors.grey.shade300,
+                        color: Colors.grey[300],
                         child: const Center(
-                          child: Icon(
-                            Icons.broken_image,
-                            size: 40,
-                            color: Colors.grey,
-                          ),
+                          child: Icon(Icons.broken_image, size: 40),
                         ),
                       ),
+                    )
+                  : Container(
+                      color: Colors.grey[300],
+                      child: const Center(
+                        child: Icon(Icons.image_not_supported, size: 40),
+                      ),
                     ),
-                  ),
-                ),
-              ),
+            ),
 
-            const SizedBox(height: 16),
-
-            // Tanggal, judul, deskripsi
+            // ======= BODY =======
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Tanggal
-                  Text(
-                    _formatDate(product.createdAt),
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 14,
+                  // Tanggal dibuat (kalau ada)
+                  if (product.createdAt != null)
+                    Text(
+                      _formatDate(product.createdAt!),
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
+                  if (product.createdAt != null) const SizedBox(height: 8),
 
                   // Nama produk
                   Text(
                     product.name,
                     style: const TextStyle(
                       fontSize: 20,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -149,42 +147,10 @@ class ProductCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey.shade800,
+                      color: Colors.grey[800],
                     ),
                   ),
                   const SizedBox(height: 12),
-                ],
-              ),
-            ),
-
-            const Divider(height: 24),
-
-            // Tombol detail + harga di bawah
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Tombol Detail
-                  ElevatedButton(
-                    onPressed: onTap,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green.shade700,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(
-                      'Detail',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
 
                   // Harga
                   Text(
@@ -195,12 +161,84 @@ class ProductCard extends StatelessWidget {
                       color: Colors.green,
                     ),
                   ),
+                  const SizedBox(height: 4),
+
+                  // Brand
+                  Text(
+                    product.brand,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[700],
+                    ),
+                  ),
                 ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // ======= FOOTER: TOMBOL DETAIL =======
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: ElevatedButton(
+                  onPressed: onTap,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade700,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 10,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'Detail',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                ),
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  String _formatCategory(String category) {
+    switch (category.toLowerCase()) {
+      case 'jersey':
+        return 'Jersey';
+      case 'shoes':
+        return 'Shoes';
+      case 'ball':
+        return 'Ball';
+      case 'accessory':
+        return 'Accessory';
+      default:
+        return category;
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 }
