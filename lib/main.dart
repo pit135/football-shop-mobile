@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
+
+import 'package:pf_shop/screens/login.dart';
+import 'package:pf_shop/screens/register.dart';
 import 'package:pf_shop/screens/menu.dart';
-import 'screens/newslist_form.dart';
+import 'package:pf_shop/screens/product_form.dart';
+// import 'package:pf_shop/screens/product_list.dart'; // Jika ada
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    Provider<CookieRequest>(
+      create: (_) => CookieRequest(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -14,15 +25,21 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Football Shop',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSwatch(
-          primarySwatch: Colors.green,
-        ).copyWith(secondary: Colors.greenAccent[400]),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.green, // Base color
+        ).copyWith(
+          primary: Colors.green.shade700, // Primary color
+          secondary: Colors.greenAccent[400], // Accent color
+        ),
         useMaterial3: true,
       ),
-      initialRoute: '/',
+      // Mulai dari halaman login
+      initialRoute: '/login',
       routes: {
-        '/': (context) => const MyHomePage(),
-        '/add-product': (context) => const NewsFormPage(),
+        '/login': (context) => const LoginPage(),
+        '/register': (context) => const RegisterPage(),
+        '/home': (context) => const MyHomePage(),
+        '/add-product': (context) => const ProductFormPage(),
       },
     );
   }

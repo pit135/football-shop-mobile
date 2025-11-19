@@ -63,7 +63,7 @@ Aspek  ------------------------  StatelessWidget  ---------------------------  S
 State (keadaan) ------- Tidak berubah (immutable) setelah dibuat ---  Dapat berubah selama aplikasi berjalan
 Kapan digunakan	------- Untuk tampilan statis yang tidak berubah ---  Untuk tampilan dinamis yang berubah karena interaksi pengguna atau data baru
 Contoh penggunaan ----- Teks, ikon, layout statis ------------------  Form, counter, tombol favorit, animasi
-Metode utama ---------- build(BuildContext context) ---------------- createState() → menghasilkan State class yang punya build() dan setState()
+Metode utama ---------- build(BuildContext context) ---------------- createState() => menghasilkan State class yang punya build() dan setState()
 
 contoh:
 
@@ -119,11 +119,11 @@ Fitur ------------------------------------ Hot Reload --------------------------
 Apa yang dilakukan ------ Memperbarui kode tanpa menghapus state aplikasi -------------- Memulai ulang aplikasi dari awal dan menghapus semua state
 Kecepatan --------------- Sangat cepat (karena hanya menimpa kode di memori) ----------- Lebih lambat, karena seluruh aplikasi direstart ulang
 Kapan digunakan	--------- Saat mengubah UI, teks, style, layout ------------------------ Saat mengubah variabel global, struktur state, atau inisialisasi data awal
-Contoh ------------------ Mengubah warna tombol → tidak kehilangan data ---------------- Mengubah variabel di main() → perlu restart agar diterapkan
+Contoh ------------------ Mengubah warna tombol => tidak kehilangan data ---------------- Mengubah variabel di main() => perlu restart agar diterapkan
 
 contoh:
-- sedang mengetes warna tombol → cukup Hot Reload
-- menambahkan variabel baru di main.dart → perlu Hot Restart
+- sedang mengetes warna tombol => cukup Hot Reload
+- menambahkan variabel baru di main.dart => perlu Hot Restart
 
 
 
@@ -141,14 +141,14 @@ contoh:
 1. Bedanya Navigator.push() vs Navigator.pushReplacement(), dan kapan saya pakai
 
 a) Navigator.push()
-=> Navigator.push() itu kayak numpuk halaman baru di atas halaman lama, halaman lama masih ada di stack, jadi kalau user pencet tombol back, dia bakal balik lagi ke halaman sebelumnya
+=> Navigator.push() itu kayak numpuk halaman baru di atas halaman lama, halaman lama masih ada di stack, jadi kalo user pencet tombol back, dia bakal balik lagi ke halaman sebelumnya
 => Contoh di app saya:
 kalo dari halaman utama saya mau ke form tambah produk, saya pakai:
 Navigator.push(
   context,
   MaterialPageRoute(builder: (context) => const NewsFormPage()),
 );
-=> Kenapa? Karena setelah user isi form dan selesai, wajar kalau dia balik lagi ke halaman utama dengan back
+=> Kenapa? Karena setelah user isi form dan selesai, wajar kalo dia balik lagi ke halaman utama dengan back
 
 b) Navigator.pushReplacement()
 => Navigator.pushReplacement() itu mengganti halaman sekarang dengan halaman baru, halaman lama dibuang dari stack, jadi tombol back nggak akan balik ke halaman sebelumnya itu
@@ -213,7 +213,7 @@ Padding(
 di sini saya kasih padding bawah 16 pixel di tiap field, supaya antar field ada jarak yang sesuai
 
 b) SingleChildScrollView
-ini penting biar form bisa discroll kalau kontennya panjang atau layar kecil (misalnya HP dengan keyboard kebuka), tanpa ini, bisa terjadi overflow (muncul pesan kuning merah di bawah)
+ini penting biar form bisa discroll kalo kontennya panjang atau layar kecil (misalnya HP dengan keyboard kebuka), tanpa ini, bisa terjadi overflow (muncul pesan kuning merah di bawah)
 di app saya, seluruh form dibungkus:
 SingleChildScrollView(
   padding: const EdgeInsets.all(16.0),
@@ -289,3 +289,319 @@ kartu menu (All Products, My Products, Create Product) warnanya biru, hijau, mer
 
 => Form & fokus field
 karena primary color hijau, saat user tap TextFormField, garis fokus dan label yang naik ikut warna hijau juga, jadi makin nyatu dengan identitas “Football Shop”
+
+
+
+=============================================================== TUGAS 9 =====================================================================
+
+
+1. Jelaskan mengapa kita perlu membuat model Dart saat mengambil/mengirim data JSON? Apa konsekuensinya jika langsung memetakan Map<String, dynamic> tanpa model (terkait validasi tipe, null-safety, maintainability)?
+
+Intinya: model Dart = “kontrak” bentuk data kita, kalo cuma pake Map<String, dynamic>, kita kehilangan semua perlindungan itu
+
+keuntungan pakai model (class):
+
+misal:
+class Product {
+  final int id;
+  final String name;
+  final int price;
+
+  Product({
+    required this.id,
+    required this.name,
+    required this.price,
+  });
+
+  factory Product.fromJson(Map<String, dynamic> json) => Product(
+        id: json['id'],
+        name: json['name'],
+        price: json['price'],
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'price': price,
+      };
+}
+
+
+a) Validasi tipe & compile-time checking
+Dengan model, field punya tipe yang jelas: id harus int, name harus String, dll. kalo kita salah pakai (misal product.price.toUpperCase()), langsung error di compile-time, sebelum app jalan. IDE juga bisa bantu auto-complete (product.name, product.price, dll).
+kalo cuma:
+Map<String, dynamic> p = jsonDecode(...);
+print(p['price']); // dynamic, bisa String? int? null?
+Tipe-nya dynamic, jadi kesalahan baru ketahuan saat runtime (app sudah jalan di emulator/HP => tiba-tiba crash).
+
+b) Null-safety yang beneran kepake
+Dengan model:
+final String name;           // wajib ada
+final String? description;   // boleh null
+kita “maksa” data punya bentuk tertentu
+kalo API berubah dan misalnya name jadi kadang nggak dikirim, kita akan kepaksa memperbaiki kode (dan itu bagus => ketahuan cepat).
+Dengan Map<String, dynamic>:
+final name = p['name']; // dynamic, bisa null, bisa String, bisa apapun
+Null-safety Dart jadi setengah kepake, karena semua dynamic.
+
+c) Maintainability & skalabilitas
+Waktu app masih kecil mungkin kerasa ribet bikin model.
+Tapi:
+- Field nambah
+- JSON makin kompleks (nested)
+- Ada banyak halaman pakai data yang sama
+Model bikin:
+- Perubahan cukup di satu tempat (Product class)
+- Semua kode lain ikut “aman”.
+kalo kita pakai Map di banyak tempat:
+- Salah tulis key dikit aja ("prcie" instead of "price") => gak ada - yang ngasih tau sampai runtime.
+kalo API ubah nama field => kita harus cari & ganti di semua file yang pakai string key itu.
+Jadi: bisa pakai Map<String, dynamic> langsung, tapi:
+Lebih riskan error runtime,
+Null-safety kurang berguna,
+Susah dirawat kalo project makin besar.
+
+
+
+
+
+
+
+
+
+
+
+
+
+2. Fungsi package http dan CookieRequest. Bedanya apa?
+Dalam tugas PBP:
+package:http
+Ini library HTTP umum di Flutter.
+Fungsinya:
+- Kirim request: GET, POST, dll.
+- Kirim body, header, dll.
+Tapi:
+- Dia tidak punya manajemen cookie/session otomatis.
+- Tiap request dianggap stateless; kalo mau simpan cookie, kita sendiri yang urus.
+Dipakai misalnya:
+- Untuk fetch data publik (yang tidak butuh login),
+- Atau request yang nggak butuh state sesi.
+- CookieRequest (dari pbp_django_auth)
+Ini wrapper khusus yang:
+- Nyimpen dan ngirim cookie secara otomatis (termasuk sessionid, csrftoken dari Django).
+
+Punya method khusus: login, logout, get, post.
+Fungsinya:
+Biar sesi Django (session-based auth) bisa dipakai dari Flutter.
+Semua request setelah login otomatis bawa cookie => Django bisa tahu user mana yang request.
+
+Jadi singkatnya:
+- http => “kabel HTTP mentah”, kita yang ngatur segalanya.
+- CookieRequest => “kabel HTTP + dompet cookie + helper login/logout”, didesain khusus untuk integrasi dengan Django session auth.
+
+
+
+
+
+
+
+
+3. Kenapa instance CookieRequest harus dibagi ke semua komponen?
+Karena:
+CookieRequest menyimpan:
+- Cookie sesi (sessionid, csrftoken) yang didapat waktu login.
+- Status login (misal loggedIn == true).
+- kalo kita bikin instance baru di tiap halaman:
+- final request = CookieRequest(); // baru lagi
+Instance ini tidak punya cookie yang didapat saat login. Jadi ketika kita request ke endpoint yang butuh login: 
+- Django tidak menerima cookie sessionid yang benar => anggap kita belum login.
+Karena itu di tutorial:
+CookieRequest dibuat satu kali, lalu Dibagikan ke seluruh widget pakai Provider (ChangeNotifierProvider / Provider biasa). Semua halaman pakai instance yang sama:
+final request = context.watch<CookieRequest>();
+kalo nggak dibagi:
+Login kelihatannya sukses di satu halaman, Tapi halaman lain waktu fetch data, Akhirnya data protected nggak bisa diambil, menu yang harusnya muncul setelah login nggak muncul, dll.
+
+
+
+
+
+
+
+
+4. Konfigurasi konektivitas Flutter ↔ Django
+Ada beberapa bagian penting:
+
+a) 10.0.2.2 di ALLOWED_HOSTS (Django)
+Di Android emulator, localhost laptop kita dilihat sebagai 10.0.2.2.
+Saat Flutter (di emulator) mengakses http://10.0.2.2:8000, Django akan menganggap hostnya 10.0.2.2.
+Django punya setting ALLOWED_HOSTS, misal:
+ALLOWED_HOSTS = ["10.0.2.2", "localhost", "127.0.0.1"]
+kalo 10.0.2.2 tidak ada di situ:
+Django melempar error: "Invalid HTTP_HOST header" dan balas 400.
+Di Flutter, kita cuma lihat gagal fetch / response error.
+
+b) CORS & pengaturan SameSite/cookie
+Terutama penting kalo:
+kita jalankan Flutter Web (origin berbeda dari Django), atau Perlu kirim cookie dengan aturan SameSite tertentu.
+Yang diatur biasanya:
+CORS_ALLOW_ALL_ORIGINS atau CORS_ALLOWED_ORIGINS
+CSRF_TRUSTED_ORIGINS
+SESSION_COOKIE_SAMESITE
+CSRF_COOKIE_SAMESITE
+Kadang SESSION_COOKIE_SECURE, CSRF_COOKIE_SECURE.
+kalo CORS/CSRF/cookie tidak diatur benar:
+Browser (untuk Flutter Web) akan:
+Blokir request atau Tidak mau mengirim/menyimpan cookie dari Django.
+
+Akibatnya:
+Login kelihatan “berhasil” di sisi API (misal respon JSON ok),
+Tapi cookie sessionid tidak pernah nempel di browser / CookieRequest => request berikutnya tetap dianggap belum login. Di mobile (Android/iOS), CORS tidak di-enforce oleh OS, tapi pengaturan cookie & CSRF tetap penting untuk session-based auth.
+
+c) Izin akses internet di Android (AndroidManifest.xml)
+Di android/app/src/main/AndroidManifest.xml harus ada:
+<uses-permission android:name="android.permission.INTERNET" />
+kalo ini tidak ada:
+Aplikasi Android kita tidak diizinkan mengakses jaringan. Di Flutter, setiap request http/CookieRequest akan gagal, Biasanya muncul error seperti SocketException: Failed host lookup atau semacamnya. UI akan gagal muat data, mungkin cuma loading terus / error.
+Jadi kalo konfigurasi salah:\
+Tidak bisa konek ke Django (400, koneksi gagal),
+Cookie session tidak terkirim => selalu dianggap belum login,
+Di Flutter, data tidak muncul, login tidak “nempel”, dll.
+
+
+
+
+
+
+
+5. Mekanisme pengiriman data: dari input => Django => tampil di Flutter
+Gambaran alurnya:
+User isi form di Flutter
+Misal form tambah produk: TextField untuk nama, harga, dll.
+Masing-masing punya TextEditingController.
+User klik tombol “Submit”
+Di onPressed, kita ambil nilai:
+final name = nameController.text;
+final price = int.parse(priceController.text);
+Flutter kirim request ke Django
+Pakai CookieRequest.post atau http.post ke URL Django, misal /create-product/.
+
+Data dikirim sebagai:
+JSON body, atau
+Form-url-encoded (tergantung implementasi view di Django).
+Django terima request
+View Django membaca data:
+request.POST[...] (kalo form), atau json.loads(request.body) (kalo JSON).
+
+Django validasi:
+Field wajib diisi?
+Tipe benar?
+User sudah login?
+kalo valid:
+Data disimpan ke database (misalnya pakai Product.objects.create(...)).
+Django mengirim respon
+Biasanya dalam bentuk JSON, misal:
+{
+  "status": "success",
+  "message": "Product created",
+  "product": { ... }
+}
+
+Flutter menerima respon
+CookieRequest.post / http.post mengembalikan body respon.
+kita jsonDecode, lalu:
+Diubah ke model Dart (Product.fromJson(...)),
+Atau dipakai langsung.
+State Flutter di-update => UI rebuild
+Data baru dimasukkan ke list state:
+setState(() {
+  products.add(newProduct);
+});
+Widget yang menampilkan list produk (ListView.builder) akan rebuild dan tiba-tiba item baru muncul di layar.
+
+
+
+
+
+
+
+6. Mekanisme autentikasi: login, register, logout (Django ↔ Flutter)
+
+a) Register
+User isi form register di Flutter
+Username, password, konfirmasi, dll.
+Flutter kirim data ke Django
+CookieRequest.post("/auth/register/", {...}) (atau URL yang ditentukan).
+Django register view:
+Ambil data dari request.
+Cek:
+Username sudah dipakai?
+Password valid?
+kalo oke:
+Buat user baru dengan User.objects.create_user(...).
+Balikkan JSON, misalnya { "status": "success" }.
+Kadang:
+Langsung login-kan user,
+Kadang user disuruh login lagi secara terpisah.
+Flutter baca respon
+kalo sukses:
+Tampilkan snackbar / pesan,
+Arahkan ke halaman login.
+
+b) Login
+User isi username & password di Flutter
+Flutter panggil CookieRequest.login(url, data)
+Misalnya: await request.login("http://10.0.2.2:8000/auth/login/", data);
+Django login view (biasanya pakai django.contrib.auth):
+Cek username & password dengan authenticate(...).
+kalo benar:
+Panggil login(request, user) => Django:
+Buat session di database,
+Kirim Set-Cookie: sessionid=... di response.
+CookieRequest menyimpan cookie
+Library pbp_django_auth otomatis:
+Menyimpan sessionid & csrftoken ke dalam CookieRequest.
+Set request.loggedIn = true dan menyimpan informasi user (kalo disediakan).
+Flutter navigasi ke menu utama
+Setelah login() return dan loggedIn == true:
+kita Navigator.pushReplacement ke halaman menu.
+Di halaman menu, kita tetap pakai context.watch<CookieRequest>() yang sama.
+Semua request setelah ini otomatis bawa cookie sessionid, sehingga:
+Django tahu user yang request,
+Endpoint yang butuh login akan mengizinkan.
+
+c) Akses endpoint setelah login
+
+Misal kita memanggil endpoint /json/my-items/:
+Flutter:
+request.get("http://10.0.2.2:8000/json/my-items/")
+CookieRequest:
+Mengirim header dengan cookie sessionid yang sudah disimpan saat login.
+Django:
+Baca sessionid,
+Rekonstruksi request.user dari session,
+kalo pakai @login_required, user boleh mengakses.
+Django kirim balik JSON berisi item milik user.
+Flutter:
+Decode JSON => list model => tampilkan di UI (misalnya My Items).
+
+d) Logout
+User pencet tombol logout di Flutter
+Flutter panggil request.logout(url)
+Misal: /auth/logout/.
+Django logout view:
+Panggil logout(request):
+Hapus session dari server,
+Cookie sessionid direset (expired).
+CookieRequest:
+Menghapus cookie internal,
+Set loggedIn = false.
+Flutter:
+Biasanya:
+Navigasi balik ke halaman login,
+Atau sembunyikan menu yang butuh login.
+Setelah logout:
+kalo kita masih coba akses endpoint yang butuh login:
+CookieRequest sudah tidak punya sessionid.
+Django akan anggap user anonymous dan:
+Bisa lempar 401/403,
+Atau balikan data kosong, tergantung implementasi.

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:pf_shop/widgets/left_drawer.dart';
-import 'package:pf_shop/screens/newslist_form.dart';
+// Impor halaman-halaman yang dituju
+import 'package:pf_shop/screens/product_list_page.dart'; 
+import 'package:pf_shop/screens/my_product_list.dart'; 
+import 'package:pf_shop/screens/product_form.dart'; 
 
 class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key});
@@ -53,7 +56,7 @@ class MyHomePage extends StatelessWidget {
 
               const SizedBox(height: 30),
 
-              // MENU BUTTONS (3 kotak warna)
+              // menu buttons (3 kotak warna)
               GridView.count(
                 crossAxisCount: 3,
                 shrinkWrap: true,
@@ -67,9 +70,11 @@ class MyHomePage extends StatelessWidget {
                     icon: Icons.list_alt,
                     text: 'All Products',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Menampilkan semua produk (coming soon)'),
+                      // Navigasi Langsung ke ProductListPage
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProductListPage(),
                         ),
                       );
                     },
@@ -80,9 +85,11 @@ class MyHomePage extends StatelessWidget {
                     icon: Icons.shopping_bag_outlined,
                     text: 'My Products',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Menampilkan produk saya (coming soon)'),
+                      // Navigasi Langsung ke MyProductListPage
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MyProductListPage(),
                         ),
                       );
                     },
@@ -93,10 +100,11 @@ class MyHomePage extends StatelessWidget {
                     icon: Icons.add_circle_outline,
                     text: 'Create Product',
                     onTap: () {
+                      // Navigasi Langsung ke ProductFormPage
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const NewsFormPage(),
+                          builder: (context) => const ProductFormPage(),
                         ),
                       );
                     },
@@ -110,7 +118,7 @@ class MyHomePage extends StatelessWidget {
     );
   }
 
-  // Kartu info kecil (Nama, NPM, Kelas)
+  // kartu kecil (Nama, NPM, Kelas)
   Widget _infoCard(String title, String value) {
     return Expanded(
       child: Container(
@@ -144,7 +152,7 @@ class MyHomePage extends StatelessWidget {
     );
   }
 
-  // Kotak menu besar (All Products, My Products, Create Product)
+  // kotak menu besar (All Products, My Products, Create Product)
   Widget _menuBox(BuildContext context,
       {required Color color,
       required IconData icon,
@@ -165,6 +173,7 @@ class MyHomePage extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 text,
+                textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
