@@ -40,7 +40,7 @@ Parent menentukan layout & posisi anak-anaknya (child), sedangkan child menentuk
 - InkWell => Memberikan efek sentuh (ripple effect) pada widget
 - SizedBox => Memberi jarak atau ukuran tetap di antara widget
 - InfoCard (custom widget) => Menampilkan informasi nama, NPM, dan kelas dalam bentuk card kecil
-- ItemButton (custom widget) => Membuat tombol persegi panjang untuk All Products, My Products, dan Create Product
+- ItemButton (custom widget) => buat tombol persegi panjang untuk All Products, My Products, dan Create Product
 
 
 
@@ -295,7 +295,7 @@ karena primary color hijau, saat user tap TextFormField, garis fokus dan label y
 =============================================================== TUGAS 9 =====================================================================
 
 
-1. Jelaskan mengapa kita perlu membuat model Dart saat mengambil/mengirim data JSON? Apa konsekuensinya jika langsung memetakan Map<String, dynamic> tanpa model (terkait validasi tipe, null-safety, maintainability)?
+1. Jelaskan mengapa kita perlu buat model Dart saat mengambil/mengirim data JSON? Apa konsekuensinya jika langsung memetakan Map<String, dynamic> tanpa model (terkait validasi tipe, null-safety, maintainability)?
 
 Intinya: model Dart = “kontrak” bentuk data kita, kalo cuma pake Map<String, dynamic>, kita kehilangan semua perlindungan itu
 
@@ -332,7 +332,7 @@ Dengan model, field punya tipe yang jelas: id harus int, name harus String, dll.
 kalo cuma:
 Map<String, dynamic> p = jsonDecode(...);
 print(p['price']); // dynamic, bisa String? int? null?
-Tipe-nya dynamic, jadi kesalahan baru ketahuan saat runtime (app sudah jalan di emulator/HP => tiba-tiba crash).
+Tipe-nya dynamic, jadi kesalahan baru ketahuan saat runtime (app udh jalan di emulator/HP => tiba-tiba crash).
 
 b) Null-safety yang beneran kepake
 Dengan model:
@@ -495,7 +495,7 @@ request.POST[...] (kalo form), atau json.loads(request.body) (kalo JSON).
 Django validasi:
 Field wajib diisi?
 Tipe benar?
-User sudah login?
+User udh login?
 kalo valid:
 Data disimpan ke database (misalnya pakai Product.objects.create(...)).
 Django mengirim respon
@@ -534,7 +534,7 @@ CookieRequest.post("/auth/register/", {...}) (atau URL yang ditentukan).
 Django register view:
 Ambil data dari request.
 Cek:
-Username sudah dipakai?
+Username udh dipakai?
 Password valid?
 kalo oke:
 Buat user baru dengan User.objects.create_user(...).
@@ -575,7 +575,7 @@ Misal kita memanggil endpoint /json/my-items/:
 Flutter:
 request.get("http://10.0.2.2:8000/json/my-items/")
 CookieRequest:
-Mengirim header dengan cookie sessionid yang sudah disimpan saat login.
+Mengirim header dengan cookie sessionid yang udh disimpan saat login.
 Django:
 Baca sessionid,
 Rekonstruksi request.user dari session,
@@ -601,7 +601,320 @@ Navigasi balik ke halaman login,
 Atau sembunyikan menu yang butuh login.
 Setelah logout:
 kalo kita masih coba akses endpoint yang butuh login:
-CookieRequest sudah tidak punya sessionid.
+CookieRequest udh tidak punya sessionid.
 Django akan anggap user anonymous dan:
 Bisa lempar 401/403,
 Atau balikan data kosong, tergantung implementasi.
+
+
+7. Jelaskan bagaimana cara kamu mengimplementasikan checklist di atas secara step-by-step! (bukan hanya sekadar mengikuti tutorial)
+
+1. Mengimplementasikan fitur registrasi akun di Flutter
+a) Integrasi ke package autentikasi
+Di Flutter kita udh pake:
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
+Artinya, di main.dart / root kita udh membungkus app dengan Provider untuk CookieRequest, sehingga di halaman lain kita bisa akses:
+final request = context.watch<CookieRequest>();
+
+b) Halaman register.dart
+Di file register.dart kita:
+buat form dengan beberapa TextFormField:
+- username
+- password
+- konfirmasi password
+Menyimpan input ke variabel lokal (misal _username, _password, _passwordConfirm).
+Saat tombol Register ditekan, kita:
+- Validasi _formKey.currentState!.validate()
+Lalu memanggil endpoint Django pakai:
+final response = await request.postJson(
+  "http://localhost:8000/auth/register/",
+  jsonEncode({
+    "username": _username,
+    "password1": _password,
+    "password2": _passwordConfirm,
+  }),
+);
+
+Kalau response['status'] == 'success', kita:
+menampilkan SnackBar "Registrasi berhasil"
+mengarahkan user ke halaman login:
+
+Navigator.pushReplacement(
+  context,
+  MaterialPageRoute(builder: (context) => const LoginPage()),
+);
+jadi fitur registrasi di Flutter langsung terhubung ke view Django yang udh kita buat di aplikasi authentication (biasanya register view).
+
+2. buat halaman login di Flutter
+a) Halaman login.dart
+Di file login.dart, alurnya:
+Ada TextFormField untuk:
+- username
+- password
+Tombol Login memanggil:
+final response = await request.login(
+  "http://localhost:8000/auth/login/",
+  {
+    'username': _username,
+    'password': _password,
+  },
+);
+Jika login sukses (request.loggedIn == true):
+- menampilkan SnackBar sukses
+- menyimpan mungkin nama user di UI (kalau kita ambil dari response)
+- mengarahkan ke MyHomePage:
+Navigator.pushReplacement(
+  context,
+  MaterialPageRoute(builder: (context) => const MyHomePage()),
+);
+Jika login gagal:
+menampilkan SnackBar pesan error (misal "Username atau password salah")
+dengan ini, user baru bisa mengakses fitur PF Shop (lihat All Products, My Products, tambah product) setelah login.
+
+3. Mengintegrasikan autentikasi Django dengan Flutter
+Integrasi ini terjadi di dua sisi: Django dan Flutter.
+a) Sisi Django
+kita udh punya aplikasi authentication dengan:
+- register view
+- login dan logout view
+- semuanya terhubung di authentication/urls.py dan di-include ke PF_Shop/urls.py dengan prefix /auth/.
+View Django mengembalikan JSON (dipakai pbp_django_auth):
+- kalau login benar → Django set session + kirim info user
+- kalau logout → session dihapus.
+Endpoint lain (contoh create-flutter/, show-my-json/) mengandalkan request.user untuk mengetahui siapa user yang sedang login.
+Contoh di view create_news_flutter yang kita modif jadi create_item_flutter:
+user = request.user
+new_item = Item(
+    user=user,
+    name=name,
+    ...
+)
+
+b) Sisi Flutter
+Di main.dart kita membungkus app dengan:
+ChangeNotifierProvider(
+  create: (_) => CookieRequest(),
+  child: MyApp(),
+);
+Ini buat CookieRequest shared di seluruh app.
+di tiap halaman (login, register, form product, list product) kita ambil instance-nya:
+final request = context.watch<CookieRequest>();
+saat login, CookieRequest otomatis menyimpan session cookie dari Django.
+Cookie inilah yang dikirim ke endpoint lain (misalnya /create-flutter/, /show-my-json/), sehingga Django tahu user mana yang sedang mengakses.
+kita juga bisa pakai request.loggedIn untuk:
+Menyembunyikan / menampilkan menu tertentu
+Mengarahkan ke login kalau belum login.
+Jadi: autentikasi Django ↔ Flutter terhubung via pbp_django_auth + session cookie.
+
+4. buat model kustom Item di Django (sesuai PF Shop)
+Di main/models.py kita udh punya:
+class Item(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    CATEGORY_CHOICES = [
+        ('jersey', 'Jersey'),
+        ('shoes', 'Shoes'),
+        ('ball', 'Ball'),
+        ('accessory', 'Accessory'),
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=255)
+    price = models.IntegerField()
+    stock = models.PositiveIntegerField(default=0)
+    brand = models.CharField(max_length=100)
+    size = models.CharField(max_length=50, blank=True)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
+    is_featured = models.BooleanField(default=False)
+    description = models.TextField()
+    thumbnail = models.URLField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+Penyesuaian dengan tema toko bola (PF Shop):
+- category berisi tipe item sepak bola (jersey, shoes, ball, accessory).
+- brand untuk merk seperti Adidas, Nike.
+- is_featured untuk tandai produk unggulan.
+- thumbnail menyimpan link gambar (dipakai di Flutter).
+- user menyimpan pemilik produk (dipakai fitur My Products).
+
+Model ini dipakai di semua endpoint:
+/show-json/ → semua Item
+/show-my-json/ → hanya Item dengan user == request.user
+/create-flutter/ → buat Item baru dari Flutter.
+
+5. Halaman daftar semua item dari endpoint JSON (All Products)
+a) Endpoint di Django
+kita punya view (misal show_json) yang mengembalikan semua Item dalam bentuk JSON, lalu dipetakan di main/urls.py sebagai:
+path('show-json/', show_json, name='show_json'),
+Inilah yang diakses Flutter.
+
+b) Model di Flutter: product_entry.dart
+kita buat model Dart yang mirror dari model Django:
+
+class ProductEntry {
+  final String id;
+  final String name;
+  final int price;
+  final int stock;
+  final String brand;
+  final String size;
+  final String category;
+  final bool isFeatured;
+  final String description;
+  final String thumbnail;
+  final DateTime createdAt;
+  // plus: user jika kita parsing
+
+  ProductEntry.fromJson(Map<String, dynamic> json)
+      : id = json['pk'],
+        name = json['fields']['name'],
+        price = json['fields']['price'],
+        stock = json['fields']['stock'],
+        brand = json['fields']['brand'],
+        size = json['fields']['size'],
+        category = json['fields']['category'],
+        isFeatured = json['fields']['is_featured'],
+        description = json['fields']['description'],
+        thumbnail = json['fields']['thumbnail'] ?? "",
+        createdAt = DateTime.parse(json['fields']['created_at']);
+}
+
+c) Halaman product_list_page.dart (All Products)
+Di file ini:
+kita ambil data dari Django:
+Future<List<ProductEntry>> fetchProducts(CookieRequest request) async {
+  final response = await request.get('$baseUrl/show-json/');
+  List<ProductEntry> listProducts = [];
+  for (var d in response) {
+    if (d != null) {
+      listProducts.add(ProductEntry.fromJson(d));
+    }
+  }
+  return listProducts;
+}
+
+Di widget:
+body: FutureBuilder(
+  future: fetchProducts(request),
+  builder: (context, AsyncSnapshot snapshot) {
+    ...
+    return GridView.builder(
+      ...
+      itemBuilder: (_, index) {
+        final product = snapshot.data![index];
+        return ProductCard(
+          product: product,
+          onTap: () { ... },
+        );
+      },
+    );
+  },
+)
+
+
+Di dalam ProductCard, kita menampilkan:
+- product.name
+- product.price
+- product.description
+plus atribut lain (kategori, brand, featured, dll.).
+
+Jadi requirement:
+Tampilkan name, price, dan description
+udh terpenuhi di ProductCard.
+
+6. Halaman detail untuk setiap item
+a) File product_detail.dart
+Halaman ini menerima satu ProductEntry:
+class ProductDetailPage extends StatelessWidget {
+  final ProductEntry product;
+
+  const ProductDetailPage({super.key, required this.product});
+
+Di build, kita menampilkan semua atribut:
+Thumbnail gambar (pakai Image.network(product.thumbnail)).
+- product.name
+- product.price
+- product.description
+- product.category
+- product.brand
+- product.size
+- product.stock
+- product.isFeatured
+- product.createdAt
+
+Jadi requirement:
+Tampilkan seluruh atribut pada model item kita
+terpenuhi melalui elemen-elemen teks di ProductDetailPage.
+
+b) Navigasi dari daftar ke detail
+Di product_list_page.dart dan my_product_list_page.dart, di ProductCard:
+
+return ProductCard(
+  product: product,
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProductDetailPage(product: product),
+      ),
+    );
+  },
+);
+
+Jadi saat user menekan satu card, dia diarahkan ke halaman detail dengan data lengkap item itu.
+
+7. Tombol kembali ke daftar item
+Di ProductDetailPage, kita punya tombol Detail udh di list; tapi untuk kembali ke daftar item:
+kita mengandalkan AppBar default (ikon < back) karena kita pakai Navigator.push.
+Selain itu bisa juga ada tombol eksplisit:
+ElevatedButton(
+  onPressed: () {
+    Navigator.pop(context);
+  },
+  child: const Text('Kembali'),
+)
+
+Selama kita memanggil halaman detail dengan Navigator.push, tombol back di AppBar otomatis akan mengembalikan user ke halaman daftar (All Products atau My Products).
+
+8. Filter daftar item → hanya milik user login (My Products)
+Ini tepatnya yang dilakukan halaman My Products.
+a) Endpoint baru di Django: /show-my-json/
+kita buat view seperti:
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from .models import Item
+
+@login_required(login_url='/auth/login/')
+def show_my_json(request):
+    items = Item.objects.filter(user=request.user)
+    data = serializers.serialize('json', items)
+    return HttpResponse(data, content_type='application/json')
+
+Dan tambahkan di main/urls.py:
+path('show-my-json/', show_my_json, name='show_my_json'),
+
+View ini memastikan:
+Hanya item yang user-nya sama dengan request.user yang dikirim ke Flutter.
+
+b) Halaman my_product_list_page.dart
+
+Di Flutter:
+
+Future<List<ProductEntry>> fetchMyProducts(CookieRequest request) async {
+  final response = await request.get('$baseUrl/show-my-json/');
+  List<ProductEntry> listProducts = [];
+  for (var d in response) {
+    if (d != null) {
+      listProducts.add(ProductEntry.fromJson(d));
+    }
+  }
+  return listProducts;
+}
+
+Lalu di FutureBuilder, kita tampilkan data sama seperti All Products, tapi sumber datanya adalah /show-my-json/.
+Hasilnya:
+- All Products → ambil dari /show-json/ → semua item di database.
+
+- My Products → ambil dari /show-my-json/ → hanya item milik user yang lagi login.
+Inilah yang memenuhi requirement:
+Melakukan filter pada halaman daftar item dengan hanya menampilkan item yang terasosiasi dengan pengguna yang login.
