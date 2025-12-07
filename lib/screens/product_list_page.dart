@@ -8,7 +8,6 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 
 // Chrome/web
 const String baseUrl = 'http://localhost:8000';
-// Emulator Android: const String baseUrl = 'http://10.0.2.2:8000';
 
 class ProductListPage extends StatefulWidget {
   const ProductListPage({super.key});

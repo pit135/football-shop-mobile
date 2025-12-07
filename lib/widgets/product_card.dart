@@ -2,10 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:pf_shop/models/product_entry.dart';
 
-// GUNAKAN INI UNTUK CHROME / WEB
 const String baseUrl = 'http://localhost:8000';
-// Kalau pakai Android emulator ganti jadi:
-// const String baseUrl = 'http://10.0.2.2:8000';
 
 class ProductCard extends StatelessWidget {
   final ProductEntry product;
@@ -31,7 +28,7 @@ class ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ======= HEADER (CATEGORY CHIP + FEATURED BADGE) =======
+            // Header
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: Row(
@@ -91,7 +88,7 @@ class ProductCard extends StatelessWidget {
 
             const SizedBox(height: 8),
 
-            // ======= THUMBNAIL BESAR =======
+            // Thumbnail
             AspectRatio(
               aspectRatio: 16 / 9,
               child: product.thumbnail.isNotEmpty
@@ -113,7 +110,7 @@ class ProductCard extends StatelessWidget {
                     ),
             ),
 
-            // ======= BODY =======
+            // Body
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
               child: Column(
@@ -177,7 +174,7 @@ class ProductCard extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // ======= FOOTER: TOMBOL DETAIL =======
+            // Footer
             Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),

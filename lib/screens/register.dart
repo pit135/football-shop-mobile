@@ -104,7 +104,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       String password1 = _passwordController.text;
                       String password2 = _confirmPasswordController.text;
 
-                      // ⬇️ Sesuaikan URL ini juga seperti di login.dart
+                      // Sesuaikan URL ini juga seperti di login.dart
                       final response = await request.postJson(
                         "http://localhost:8000/auth/register/",
                         jsonEncode({

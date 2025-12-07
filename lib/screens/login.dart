@@ -78,10 +78,6 @@ class _LoginPageState extends State<LoginPage> {
                       String username = _usernameController.text;
                       String password = _passwordController.text;
 
-                      // ⬇️ PENTING: Sesuaikan dengan cara Anda akses Django:
-                      // - Emulator Android: "http://10.0.2.2:8000/auth/login/"
-                      // - Chrome web: "http://localhost:8000/auth/login/"
-                      // - Perangkat Fisik/Koneksi LAN: "http://[IP_LOKAL_ANDA]:8000/auth/login/"
                       final response = await request.login(
                         "http://localhost:8000/auth/login/",
                         {

@@ -4,8 +4,6 @@ import 'package:pf_shop/models/product_entry.dart';
 
 // CHROME / WEB:
 const String baseUrl = 'http://localhost:8000';
-// Emulator Android:
-// const String baseUrl = 'http://10.0.2.2:8000';
 
 class ProductDetailPage extends StatelessWidget {
   final ProductEntry product;
